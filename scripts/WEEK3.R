@@ -1,168 +1,95 @@
-#Load data
-data(iris)
+#load leaflet library
+library(leaflet)
+#The basic leaflet widget shows an empty map widget with no tiles or markers.
+#create map widget
+map<-leaflet()
+#Adding tiles to the map
+#If there is np tile is mentioned it will openStreetMap
+map<-leaflet()%>%addTiles()
+#print map widget
+map
+#Adding markers on map
+#map<-leaflet()%>%addTiles()%>%addMarkers(lng,lat,popup)
+map<-leaflet()%>%addTiles()%>%addMarkers(lng=82.07,lat=17.09,popup="Aditya University, Andhra Pradesh,India")
+map
 
-?iris
-### Inspect the data
-head(iris)
-str(iris)
-View(iris)
-class(iris)
-
-#VERY BASIC BAR CHART (Base R)
-#Count of each species
-
-barplot(table(iris$Species))
-
-#LABELED BAR CHART (Base R)
-barplot(
-  table(iris$Species),
-  main="Count of Iris Species",
-  xlab="Species",
-  ylab="Number of Flowers",
-  col="lightblue"
+#Inntercative map with multiple locations
+india_map<-leaflet()%>%addTiles()%>%setView(lng=78.9629,lat=20.5937,zoom=5)
+#Sample data with top cities of india
+cities_data<-data.frame(
+  city=c("Mumbai","Delhi","Bangalore","Hyderabad","Chennai","Kolkata"),
+  lat=c(19.0760,28.6139,12.9716,17.3850,13.0827,22.5726),
+  lng=c(72.8777,77.2090,77.5946,78.4867,80.2707,88.3639),
+  population=c(12442373,11034555,8443675,6772291,4681087,4486679),
+  state = c("Maharashtra","Delhi (NCT)","Karnataka","Telangana","Tamil Nadu","West Bengal"),
+  famous=c("Bollywood","Red Fort","IT Industry","Charminar","Marina Beach","Howrah Bridge")
 )
-
-#BAR CHART FROM AGGREGATE DATA(Base R)
-#Mean Sepal Length per Species
-
-mean_sepal<-tapply(iris$Sepal.Length,iris$Species,mean)
-mean_sepal
-
-barplot(
-  mean_sepal,
-  col="orange",
-  main="Average Sepal Length",
-  xlab="Species",
-  ylab="Mean Sepal Length"
+india_map<-india_map%>%addCircleMarkers(
+  data=cities_data,
+  lng=~lng,lat=~lat,
+  radius=~sqrt(population)*0.01,
+  color="orange",
+  fillOpacity =0.7,
+  popup=~paste("City:",city,"<br>Population:",population,"<br>Sate:",state,"<br>Famous:",famous)
 )
-
-#Bar charts can represent aggregated values,not just counts
-
-#Layer 4: GROUPED BAR CHART(Base R)
-#Compare sepal and petal Length(mean)
-
-group_means<-rbind(
-  Sepal=tapply(iris$Sepal.Length,iris$Species,mean),
-  Petal=tapply(iris$Petal.Length,iris$Species,mean)
-)
-#grouped_means
-barplot(
-  group_means,
-  beside=TRUE,
-  col=c("skyblue","pink"),
-  legend.text=TRUE,
-  main="Grouped Bar Chart :Sepal vs Petal Length"
-)
-
-#Grouped (Clustered) Bar chart
-
-#Layer 5 :Stacked BAR CHART (Base R)
-
-barplot(
-  group_means,
-  beside=FALSE,
-  col=c("skyblue","pink"),
-  legend.text=TRUE,
-  main="Stacked Bar Chart :Sepal vs Petal Length"
-)
-#Shows composition +total
-#Harder to compare individual segments
-
-group_means<-rbind(
-  Sepal_l=tapply(iris$Sepal.Length,iris$Species,mean),
-  Petal_l=tapply(iris$Petal.Length,iris$Species,mean),
-  Sepal_w=tapply(iris$Sepal.Length,iris$Species,mean),
-  Petal_w=tapply(iris$Petal.Length,iris$Species,mean)
-)
-barplot(
-  group_means,
-  beside=FALSE,
-  col=c("skyblue","skyblue","pink","pink"),
-  legend.text=TRUE,
-  main="Stacked Bar Chart :Sepal vs Petal Length"
-)
-
-#Load ggplot2
-library(ggplot2)
-
-# Count bar chart
-ggplot(iris, aes(x = Species)) +
-  geom_bar()
-# ggplot counts automatically
-
-# LAYER 7: STYLED BAR CHART (ggplot2)
-ggplot(iris, aes(x = Species)) +
-  geom_bar(fill = "steelblue") +
-  labs(
-    title = "Distribution of Iris Species",
-    y = "Count"
-  ) +
-  theme_minimal()
-
-# LAYER 8: BAR CHART WITH AGGREGATION (ggplot2)
-
-# Mean Sepal Length per Species
-ggplot(iris, aes(x = Species, y = Sepal.Length)) +
-  stat_summary(
-    fun = mean,
-    geom = "bar",
-    fill = "orange"
-  ) +
-  labs(
-    title = "Mean Sepal Length by Species",
-    y = "Mean Sepal Length"
-  ) +
-  theme_minimal()
-# stat_summary() performs aggregation
+india_map
 
 
-# LAYER 9: GROUPED BAR CHART (ggplot2)
-ggplot(iris, aes(x = Species, fill = Species)) +
-  geom_bar(position = "dodge") +
-  theme_minimal()
-
-# Or with aggregated values:
-ggplot(iris, aes(x = Species, y = Sepal.Length, fill = Species)) +
-  stat_summary(
-    fun = mean,
-    geom = "bar",
-    position = "dodge"
-  ) +
-  theme_minimal()
-# Easy comparison across categories
 
 
-# LAYER 10: STACKED BAR CHART (ggplot2)
-# Count-based stacked bar chart
-ggplot(iris, aes(x = Species, fill = Species)) +
-  geom_bar(position = "stack") +
-  theme_minimal()
 
-# Stacked bar with another categorical variable (example)
-ggplot(iris, aes(x = Species, fill = cut(Sepal.Length,50))) +
-  geom_bar(position = "stack") +
-  labs(fill = "Sepal Length Group") +
-  theme_minimal()
-# Shows sub-category composition
 
-# Or with aggregated values:
-library(tidyr)
 
-iris_long <- pivot_longer(
-  iris,
-  cols = c(Sepal.Length, Petal.Length),
-  names_to = "Measurement",
-  values_to = "Value"
-)
-# Plot
-ggplot(iris_long, aes(x = Species, y = Value, fill = Measurement)) +
-  stat_summary(
-    fun = mean,
-    geom = "bar",
-    position = "stack"
-  ) +
-  labs(
-    title = "Stacked Bar Chart of Mean Measurements (Iris)",
-    y = "Mean Value"
-  ) +
-  theme_minimal()
+
+
+
+
+
+
+
+
+#load library
+#Draw map
+leaflet()%>%
+  #Add first tile
+  addTiles(group="One")%>%
+  #Add second tile
+  addProviderTiles(providers$Esri.WorldImagery,group="Two")%>%
+  #Add first marker
+  addMarkers(lng=25.505206,lat=65.9767231,group="mark1")%>%
+  #Add second marker
+  addMarkers(lng=-45.445206,lat=45.5327231,group="mark2")%>%
+  #Add layer controls
+  addLayersControl(baseGroups=c("One","Two"),
+                   overlayGroups = c("mark1","mark2"),
+                   options=layersControlOptions(collapsed=FALSE))
+
+
+
+#plot data on top of map
+my_map<-leaflet()%>%
+  addTiles()%>%
+  setView(lng=0,lat=0,zoom=2)
+  #Sample data
+  data<-data.frame(
+    lng=c(0,10,-20),
+    lat=c(0,15,-10),
+    value=c(100,200,150)
+  )
+#Add circle markers based on the sample data
+my_map<-my_map%>%
+  addCircleMarkers(
+    data=data,
+    lng=~lng,
+    lat=~lat,
+    radius=~sqrt(value)*2,
+    color="red",
+    fillOpacity=0.7,
+    popup=~paste("Value:",value)
+  )
+my_map
+
+
+
+
+
